@@ -9,14 +9,14 @@ set(CMAKE_CXX_FLAGS "-O3 -march=native")
 find_package(Boost REQUIRED COMPONENTS headers)
 
 # Оригинальные тесты (без jemalloc)
-add_executable(single_vec original/single_vec.cpp)
+add_executable(single_vec src/single_vec.cpp)
 target_link_libraries(single_vec PRIVATE Boost::headers)
 
-add_executable(single_pool original/single_pool.cpp)
+add_executable(single_pool src/single_pool.cpp)
 target_link_libraries(single_pool PRIVATE Boost::headers)
 
-add_executable(multi_vec original/multi_vec.cpp)
+add_executable(multi_vec src/multi_vec.cpp)
 target_link_libraries(multi_vec PRIVATE Boost::headers)
 
-add_executable(multi_pool original/multi_pool.cpp)
+add_executable(multi_pool src/multi_pool.cpp)
 target_link_libraries(multi_pool PRIVATE Boost::headers)

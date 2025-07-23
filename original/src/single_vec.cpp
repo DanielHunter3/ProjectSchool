@@ -1,6 +1,7 @@
 #include <vector>
 #include <chrono>
 #include <iostream>
+
 #include <boost/container/small_vector.hpp>
 
 constexpr size_t ITERATIONS = 1'000'000'000; // Общее количество операций

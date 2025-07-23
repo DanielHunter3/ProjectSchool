@@ -2,6 +2,8 @@
 #include <thread>
 #include <chrono>
 #include <iostream>
+#include <array>
+
 #include <boost/container/small_vector.hpp>
 
 // Конфигурация теста
@@ -33,12 +35,11 @@ template<typename VectorType>
 void run_benchmark(const std::string& name) {
   auto start = std::chrono::high_resolution_clock::now();
   
-  std::vector<std::thread> threads;
-  threads.reserve(THREADS); // Оптимизация выделения памяти
+  std::array<std::thread, THREADS> threads;
 
   // Запуск потоков
   for (size_t i = 0; i < THREADS; ++i) {
-    threads.emplace_back(thread_task<VectorType>);
+    threads[i] = std::thread(thread_task<VectorType>);
   }
   
   // Ожидание завершения

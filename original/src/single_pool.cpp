@@ -1,9 +1,10 @@
-#include <boost/pool/pool.hpp>
 #include <iostream>
 #include <vector>
 #include <chrono>
 #include <memory>
 #include <cstring>
+
+#include <boost/pool/pool.hpp>
 
 using Duration = std::chrono::duration<double>;
 

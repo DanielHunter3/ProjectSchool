@@ -4,6 +4,7 @@
 #include <chrono>
 #include <cstring>
 #include <functional>
+#include <array>
 
 #ifdef USE_JEMALLOC
 #include <jemalloc/jemalloc.h>
@@ -49,21 +50,24 @@ void worker_thread() {
 int main() {
   auto start = std::chrono::high_resolution_clock::now();
 
-  std::vector<std::thread> threads;
-  threads.reserve(THREADS);
+  std::array<std::thread, THREADS> threads;
   for (size_t i = 0; i < THREADS; ++i) {
-    threads.emplace_back(worker_thread);
+    threads[i] = std::thread(worker_thread);
   }
   for (auto& t : threads) t.join();
 
   auto end = std::chrono::high_resolution_clock::now();
 
-  #ifdef USE_JEMALLOC
-    std::cout << "Allocator: jemalloc\n";
-  #else
-    std::cout << "Allocator: system malloc\n";
-  #endif
-  std::cout << "Time: " << Duration(end - start).count() << " sec\n";
+#if defined(USE_JEMALLOC)
+  std::cout << "Jemalloc: ";
+#elif defined(USE_TCMALLOC)
+  std::cout << "Tcmalloc: ";
+#elif defined(USE_MIMALLOC)
+  std::cout << "Mimalloc: ";
+#else
+  std::cout << "Malloc: ";
+#endif
+  std::cout << Duration(end - start).count() << " sec\n";
 
   return 0;
 }

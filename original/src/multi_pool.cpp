@@ -1,10 +1,12 @@
-#include <boost/pool/pool.hpp>
 #include <iostream>
 #include <vector>
 #include <thread>
 #include <chrono>
 #include <memory>
 #include <cstring>
+#include <array>
+
+#include <boost/pool/pool.hpp>
 
 using Duration = std::chrono::duration<double>;
 
@@ -54,13 +56,12 @@ void test_new_delete() {
 
 template<typename TestFunc>
 void run_benchmark(TestFunc&& test_func, const std::string& name) {
-  std::vector<std::thread> threads;
-  threads.reserve(THREAD_COUNT);
+  std::array<std::thread, THREAD_COUNT> threads;
   
   auto total_start = std::chrono::high_resolution_clock::now();
   
   for (int i = 0; i < THREAD_COUNT; ++i) {
-    threads.emplace_back(test_func);
+    threads[i] = std::thread(test_func);
   }
   
   for (auto& t : threads) {

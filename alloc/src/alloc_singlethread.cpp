@@ -51,13 +51,17 @@ int main() {
  
   auto end = std::chrono::high_resolution_clock::now();
 
-#ifdef USE_JEMALLOC
-  std::cout << "Allocator: jemalloc\n";
+#if defined(USE_JEMALLOC)
+  std::cout << "Jemalloc: ";
+#elif defined(USE_TCMALLOC)
+  std::cout << "Tcmalloc: ";
+#elif defined(USE_MIMALLOC)
+  std::cout << "Mimalloc: ";
 #else
-  std::cout << "Allocator: system malloc\n";
+  std::cout << "Malloc: ";
 #endif
 
-  std::cout << "Time: " << Duration(end - start).count() << " sec\n";
+  std::cout << Duration(end - start).count() << " sec\n";
  
   return 0;
 }
