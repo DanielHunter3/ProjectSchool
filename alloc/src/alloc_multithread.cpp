@@ -3,71 +3,78 @@
 #include <vector>
 #include <chrono>
 #include <cstring>
-#include <functional>
-#include <array>
-
-#ifdef USE_JEMALLOC
-#include <jemalloc/jemalloc.h>
-#endif
+#include <random>
+#include <numeric>
+#include <memory>
 
 using Duration = std::chrono::duration<double>;
 
+// Конфигурация
 constexpr size_t THREADS = 8;
 constexpr size_t OPERATIONS_PER_THREAD = 500'000;
 constexpr size_t MIN_ALLOC_SIZE = 256;
 constexpr size_t MAX_ALLOC_SIZE = 8192;
+constexpr size_t BENCHMARK_RUNS = 5;
 
-void* fmalloc(size_t Size, std::function<void(void)> func) {
-  void* ptr = malloc(Size);
-  if (!ptr) {
-    std::cerr << "Alloc failed!\n";
-    func();
-    exit(1);
-  }
-  return ptr;
+// Глобальные thread-local генераторы
+namespace {
+  thread_local std::mt19937 gen(std::random_device{}());
+  thread_local std::uniform_int_distribution<size_t> size_dist(
+    MIN_ALLOC_SIZE, MAX_ALLOC_SIZE
+  );
 }
 
-void worker_thread() {
-  std::vector<void*> ptrs;
+void worker_thread(size_t& checksum) {
+  std::vector<std::unique_ptr<void, void(*)(void*)>> ptrs;
   ptrs.reserve(OPERATIONS_PER_THREAD);
 
-  auto func = [&ptrs]() {
-    for (void* ptr: ptrs) {
-      free(ptr);
-    }
-  };
-
   for (size_t i = 0; i < OPERATIONS_PER_THREAD; ++i) {
-    size_t size = 16 + (i % 1024); // Разные размеры
-    void* ptr = fmalloc(size, func);
-    memset(ptr, 0xAA, size); // Заполнение памяти (антимёртвый код)
-    ptrs.emplace_back(ptr);
+    size_t size = size_dist(gen);
+    void* ptr = malloc(size);
+    if (!ptr) throw std::bad_alloc();
+    
+    memset(ptr, 0xAA, size);
+    checksum += *(static_cast<unsigned char*>(ptr));
+    ptrs.emplace_back(ptr, free); // Автоматическое освобождение
+  }
+  // Явный clear не нужен - деструкторы unique_ptr сделают всё автоматически
+}
+
+double run_bench() {
+  auto start = std::chrono::high_resolution_clock::now();
+  std::vector<std::thread> threads;
+  std::vector<size_t> checksums(THREADS, 0);
+
+  for (auto& checksum : checksums) {
+    threads.emplace_back(worker_thread, std::ref(checksum));
   }
 
-  func();
+  for (auto& t : threads) {
+    t.join();
+  }
+
+  return Duration(std::chrono::high_resolution_clock::now() - start).count();
 }
 
 int main() {
-  auto start = std::chrono::high_resolution_clock::now();
+  std::vector<double> timings;
+  timings.reserve(BENCHMARK_RUNS);
 
-  std::array<std::thread, THREADS> threads;
-  for (size_t i = 0; i < THREADS; ++i) {
-    threads[i] = std::thread(worker_thread);
+  for (size_t i = 0; i < BENCHMARK_RUNS; ++i) {
+    timings.push_back(run_bench());
+    std::cerr << "Run " << i+1 << ": " << timings.back() << " sec\n";
   }
-  for (auto& t : threads) t.join();
 
-  auto end = std::chrono::high_resolution_clock::now();
+  double avg = std::accumulate(timings.begin(), timings.end(), 0.0) / BENCHMARK_RUNS;
+  double stddev = 0.0;
+  for (double t : timings) {
+    stddev += (t - avg) * (t - avg);
+  }
+  stddev = std::sqrt(stddev / BENCHMARK_RUNS);
 
-#if defined(USE_JEMALLOC)
-  std::cout << "Jemalloc: ";
-#elif defined(USE_TCMALLOC)
-  std::cout << "Tcmalloc: ";
-#elif defined(USE_MIMALLOC)
-  std::cout << "Mimalloc: ";
-#else
-  std::cout << "Malloc: ";
-#endif
-  std::cout << Duration(end - start).count() << " sec\n";
+  std::cout << "Average: " << avg << " sec\n"
+       << "StdDev: ±" << stddev << "\n"
+       << "Throughput: " << (THREADS * OPERATIONS_PER_THREAD / avg) << " allocs/sec\n";
 
   return 0;
 }

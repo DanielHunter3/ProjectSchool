@@ -3,75 +3,75 @@
 # =============================================
 # Настройки
 # =============================================
-BUILD_DIR="test/build"    # Папка для сборки
-LOG_FILE="test/benchmark.log" # Файл для результатов
-SRC_DIR="src"        # Папка с исходниками
-RUNS=5           # Количество запусков
+BUILD_DIR="test/build"
+LOG_FILE="test/benchmark.log"
 
-# Создаем необходимые директории
+declare -A PROGRAMS=(
+  ["std_st"]="[ST] System malloc"
+  ["je_st"]="[ST] Jemalloc"
+  ["tc_st"]="[ST] Tcmalloc"
+  ["mi_st"]="[ST] Mimalloc"
+  ["std_mt"]="[MT] System malloc"
+  ["je_mt"]="[MT] Jemalloc"
+  ["tc_mt"]="[MT] Tcmalloc"
+  ["mi_mt"]="[MT] Mimalloc"
+)
+
+# =============================================
+# Инициализация
+# =============================================
+echo "Подготовка окружения..."
 mkdir -p "$BUILD_DIR"
-cd "$BUILD_DIR" || exit 1
+> "$LOG_FILE"
 
 # =============================================
 # Компиляция
 # =============================================
-
-# Jemalloc
-g++ -O3 -pthread -DUSE_JEMALLOC "../../$SRC_DIR/alloc_multithread.cpp" -ljemalloc -o je_mt
-g++ -O3 -DUSE_JEMALLOC "../../$SRC_DIR/alloc_singlethread.cpp" -ljemalloc -o je_st
-
-# Tcmalloc
-g++ -O3 -pthread -DUSE_TCMALLOC "../../$SRC_DIR/alloc_multithread.cpp" -ltcmalloc -o tc_mt
-g++ -O3 -DUSE_TCMALLOC "../../$SRC_DIR/alloc_singlethread.cpp" -ltcmalloc -o tc_st
-
-# Mimalloc
-g++ -O3 -pthread -DUSE_MIMALLOC "../../$SRC_DIR/alloc_multithread.cpp" -lmimalloc -o mi_mt
-g++ -O3 -DUSE_MIMALLOC "../../$SRC_DIR/alloc_singlethread.cpp" -lmimalloc -o mi_st
-
-# Стандартный malloc
-g++ -O3 -pthread "../../$SRC_DIR/alloc_multithread.cpp" -o std_mt
-g++ -O3 "../../$SRC_DIR/alloc_singlethread.cpp" -o std_st
+echo -e "\nСборка проектов..." | tee -a "$LOG_FILE"
+if ! make -j$(nproc); then
+  echo "ОШИБКА: Сборка не удалась!" | tee -a "$LOG_FILE"
+  exit 1
+fi
 
 # =============================================
-# Тестирование
+# Функция запуска теста
 # =============================================
-
-# Очищаем предыдущий лог
-: > "../../$LOG_FILE"
-
 run_test() {
-  local prefix=$1
-  local test_name=$2
+  local program="$1"
+  local description="$2"
+  local log_file="$3"
   
-  echo -e "\n=== $test_name ===" | tee -a "../../$LOG_FILE"
+  echo -e "\n$description" | tee -a "$log_file"
   
-  for i in $(seq 1 $RUNS); do
-    echo -e "\nПопытка $i:" | tee -a "../../$LOG_FILE"
-    
-    if [ -f "./${prefix}_st" ]; then
-      echo -n "Singlethread: " | tee -a "../../$LOG_FILE"
-      { time "./${prefix}_st"; } 2>&1 | grep real | awk '{print " " $2}' | tee -a "../../$LOG_FILE"
-    fi
-    
-    if [ -f "./${prefix}_mt" ]; then
-      echo -n "Multithread: " | tee -a "../../$LOG_FILE"
-      { time "./${prefix}_mt"; } 2>&1 | grep real | awk '{print " " $2}' | tee -a "../../$LOG_FILE"
-    fi
-    
-    echo "------------------------" | tee -a "../../$LOG_FILE"
-  done
+  if [ ! -f "$BUILD_DIR/$program" ]; then
+    echo "ОШИБКА: Файл $program не найден!" | tee -a "$log_file"
+    echo "---------------------" | tee -a "$log_file"
+    return 1
+  fi
+  
+  if [ $status -eq 124 ]; then
+    echo "ПРЕРВАНО: Тест превысил время выполнения" | tee -a "$log_file"
+  elif [ $status -ne 0 ]; then
+    echo "ОШИБКА: Тест завершился с кодом $status" | tee -a "$log_file"
+  fi
+  
+  echo "---------------------" | tee -a "$log_file"
+  return $status
 }
 
-echo "Начинаем тестирование..." | tee -a "../../$LOG_FILE"
+# =============================================
+# Основное тестирование
+# =============================================
+echo -e "\nЗапуск тестов..." | tee -a "$LOG_FILE"
 
-# Тестируем все варианты
-run_test "std" "Стандартный malloc"
-run_test "je" "Jemalloc"
-run_test "tc" "TCMalloc"
-run_test "mi" "Mimalloc"
+for program in "${!PROGRAMS[@]}"; do
+  run_test "$program" "${PROGRAMS[$program]}" "$LOG_FILE"
+done
 
 # =============================================
-# Завершение
+# Итоги
 # =============================================
-cd - > /dev/null
-echo -e "\nТестирование завершено. Результаты в $LOG_FILE"
+echo -e "\nРезультаты тестирования:" | tee -a "$LOG_FILE"
+grep -E "(\[ST\]|\[MT\])|(Malloc|Jemalloc|Tcmalloc|Mimalloc)" "$LOG_FILE" | tee -a "$LOG_FILE"
+
+echo -e "\nТестирование завершено. Полные результаты в $LOG_FILE"

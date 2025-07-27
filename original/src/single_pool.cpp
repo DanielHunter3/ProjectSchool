@@ -1,69 +1,107 @@
 #include <iostream>
 #include <vector>
 #include <chrono>
-#include <memory>
 #include <cstring>
+#include <numeric>
+#include <cmath>
 
 #include <boost/pool/pool.hpp>
 
 using Duration = std::chrono::duration<double>;
 
-constexpr size_t OBJECT_SIZE = 256;
-constexpr size_t ALLOCATIONS = 8'000'000; // 8 потоков × 1M операций
+constexpr size_t OBJECT_SIZE = 32;
+constexpr size_t ALLOCATIONS = 1'000'000;
+constexpr size_t WARMUP_ITERATIONS = ALLOCATIONS / 10;
+constexpr size_t BENCHMARK_RUNS = 5;
 
-struct TestObject { char data[OBJECT_SIZE]; };
+struct TestObject {
+  char data[OBJECT_SIZE];
+};
 
 constexpr size_t SIZE = sizeof(TestObject);
 
-void test_pool() {
-  boost::pool<> pool(SIZE);
+boost::pool<> global_pool(SIZE); // Теперь просто global pool вместо thread_local
 
+void warmup_pool() noexcept {
+  void* ptr = global_pool.malloc();
+  global_pool.free(ptr);
+}
+
+void warmup_malloc() noexcept {
+  void* ptr = malloc(SIZE);
+  free(ptr);
+}
+
+template<typename TestFunc, typename WarmupFunc>
+Duration measure(TestFunc&& test_func, WarmupFunc&& warmup) {
+  for (size_t i = 0; i < WARMUP_ITERATIONS; ++i) {
+    warmup();
+  }
+
+  auto start = std::chrono::high_resolution_clock::now();
+  test_func();
+  auto end = std::chrono::high_resolution_clock::now();
+  return Duration(end - start);
+}
+
+void test_pool() {
   std::vector<TestObject*> objects;
   objects.reserve(ALLOCATIONS);
 
-  // Аллокация
   for (size_t i = 0; i < ALLOCATIONS; ++i) {
-    auto ptr = static_cast<TestObject*>(pool.malloc());
-    memset(ptr, 0xAA, OBJECT_SIZE); // Заполнение памяти (антимёртвый код)
-    objects.push_back(ptr);
+    auto ptr = static_cast<TestObject*>(global_pool.malloc());
+    memset(ptr, 0xAA, SIZE);
+    objects.emplace_back(ptr);
   }
 
-  // Освобождение
-  for (auto obj : objects) {
-    pool.free(obj);
+  for (auto it = objects.rbegin(); it != objects.rend(); ++it) {
+    global_pool.free(*it);
   }
+  global_pool.purge_memory();
 }
 
-void test_new_delete() {
-  std::vector<std::unique_ptr<TestObject>> objects;
+void test_malloc() {
+  std::vector<TestObject*> objects;
   objects.reserve(ALLOCATIONS);
 
-  // Аллокация
   for (size_t i = 0; i < ALLOCATIONS; ++i) {
-    auto ptr = new TestObject;
-    memset(ptr, 0xAA, OBJECT_SIZE); // Заполнение памяти (антимёртвый код)
-    objects.emplace_back(new TestObject);
+    auto ptr = static_cast<TestObject*>(malloc(SIZE));
+    memset(ptr, 0xAA, SIZE);
+    objects.emplace_back(ptr);
   }
 
-  // Освобождение (автоматически через unique_ptr)
+  for (auto it = objects.rbegin(); it != objects.rend(); ++it) {
+    free(*it);
+  }
 }
 
-template<typename TestFunc>
-void run_benchmark(TestFunc&& test_func, const std::string& name) {
-  auto total_start = std::chrono::high_resolution_clock::now();
-  
-  test_func();
-  
-  auto total_end = std::chrono::high_resolution_clock::now();
-  Duration total_duration = total_end - total_start;
-  
-  std::cout << "TOTAL " << name << " time: " << total_duration.count() 
-       << " sec \n";
+template<typename TestFunc, typename WarmupFunc>
+void run_benchmark(TestFunc&& test_func, const std::string& name, WarmupFunc&& warmup) {
+  std::vector<double> timings(BENCHMARK_RUNS);
+
+  for (size_t i = 0; i < BENCHMARK_RUNS; ++i) {
+    timings[i] = measure(
+      test_func,
+      warmup
+    ).count();
+    
+    std::cerr << "Run " << (i+1) << ": " << timings[i] << " sec\n";
+  }
+
+  double avg_time = std::accumulate(timings.begin(), timings.end(), 0.0) / BENCHMARK_RUNS;
+  double stddev = 0.0;
+  for (double t : timings) {
+    stddev += (t - avg_time) * (t - avg_time);
+  }
+  stddev = std::sqrt(stddev / BENCHMARK_RUNS);
+
+  std::cout << "[" << name << "] "
+       << "Average: " << avg_time << " sec, "
+       << "StdDev: ±" << stddev << "\n";
 }
 
 int main() {
-  run_benchmark(test_pool, "boost::pool");
-  run_benchmark(test_new_delete, "new/delete");
-
+  run_benchmark(test_pool, "boost::pool", warmup_pool);
+  run_benchmark(test_malloc, "malloc/free", warmup_malloc);
   return 0;
 }
