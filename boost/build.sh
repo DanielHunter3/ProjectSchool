@@ -13,6 +13,8 @@ declare -A PROGRAMS=(
   ["multi_pool"]="Multithread POOL" 
   ["single_vec"]="Singlethread VECTOR"
   ["multi_vec"]="Multithread VECTOR"
+  ["single_map"]="Singlethread FAST-POOL-ALLOCATOR"
+  ["multi_map"]="Multithread FAST-POOL-ALLOCATOR"
 )
 
 # =============================================

@@ -15,8 +15,14 @@ target_link_libraries(single_vec PRIVATE Boost::headers)
 add_executable(single_pool src/single_pool.cpp)
 target_link_libraries(single_pool PRIVATE Boost::headers)
 
+add_executable(single_map src/single_map.cpp)
+target_link_libraries(single_map PRIVATE Boost::headers)
+
 add_executable(multi_vec src/multi_vec.cpp)
 target_link_libraries(multi_vec PRIVATE Boost::headers)
 
 add_executable(multi_pool src/multi_pool.cpp)
 target_link_libraries(multi_pool PRIVATE Boost::headers)
+
+add_executable(multi_map src/multi_map.cpp)
+target_link_libraries(multi_map PRIVATE Boost::headers)
