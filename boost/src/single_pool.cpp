@@ -76,7 +76,13 @@ void test_malloc() {
 }
 
 template<typename TestFunc, typename WarmupFunc>
-void run_benchmark(TestFunc&& test_func, const std::string& name, WarmupFunc&& warmup) {
+void run_benchmark
+(
+  TestFunc&& test_func, 
+  const std::string& name, 
+  WarmupFunc&& warmup
+) 
+{
   std::vector<double> timings(BENCHMARK_RUNS);
 
   for (size_t i = 0; i < BENCHMARK_RUNS; ++i) {
