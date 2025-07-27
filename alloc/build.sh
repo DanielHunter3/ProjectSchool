@@ -37,26 +37,22 @@ fi
 # Функция запуска теста
 # =============================================
 run_test() {
-  local program="$1"
-  local description="$2"
-  local log_file="$3"
+  local program=$1
+  local description=$2
   
-  echo -e "\n$description" | tee -a "$log_file"
+  echo -e "\n$description" | tee -a "$LOG_FILE"
   
   if [ ! -f "$BUILD_DIR/$program" ]; then
-    echo "ОШИБКА: Файл $program не найден!" | tee -a "$log_file"
-    echo "---------------------" | tee -a "$log_file"
+    echo "ОШИБКА: Файл $program не найден!" | tee -a "$LOG_FILE"
+    echo "------------------------" | tee -a "$LOG_FILE"
     return 1
   fi
   
-  if [ $status -eq 124 ]; then
-    echo "ПРЕРВАНО: Тест превысил время выполнения" | tee -a "$log_file"
-  elif [ $status -ne 0 ]; then
-    echo "ОШИБКА: Тест завершился с кодом $status" | tee -a "$log_file"
-  fi
+  "$BUILD_DIR/$program" | while read -r line; do
+    echo "$line" | tee -a "$LOG_FILE"
+  done
   
-  echo "---------------------" | tee -a "$log_file"
-  return $status
+  echo "------------------------" | tee -a "$LOG_FILE"
 }
 
 # =============================================
@@ -65,13 +61,10 @@ run_test() {
 echo -e "\nЗапуск тестов..." | tee -a "$LOG_FILE"
 
 for program in "${!PROGRAMS[@]}"; do
-  run_test "$program" "${PROGRAMS[$program]}" "$LOG_FILE"
+  run_test "$program" "${PROGRAMS[$program]}"
 done
 
 # =============================================
 # Итоги
 # =============================================
-echo -e "\nРезультаты тестирования:" | tee -a "$LOG_FILE"
-grep -E "(\[ST\]|\[MT\])|(Malloc|Jemalloc|Tcmalloc|Mimalloc)" "$LOG_FILE" | tee -a "$LOG_FILE"
-
-echo -e "\nТестирование завершено. Полные результаты в $LOG_FILE"
+echo -e "\nТестирование завершено. Результаты в $LOG_FILE"

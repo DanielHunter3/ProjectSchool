@@ -11,7 +11,7 @@ using Duration = std::chrono::duration<double>;
 
 // Конфигурация
 constexpr size_t THREADS = 8;
-constexpr size_t OPERATIONS_PER_THREAD = 500'000;
+constexpr size_t OPERATIONS_PER_THREAD = 250'000;
 constexpr size_t MIN_ALLOC_SIZE = 256;
 constexpr size_t MAX_ALLOC_SIZE = 8192;
 constexpr size_t BENCHMARK_RUNS = 5;

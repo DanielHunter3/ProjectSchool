@@ -9,7 +9,7 @@
 using Duration = std::chrono::duration<double>;
 
 // Конфигурация
-constexpr size_t TOTAL_OPERATIONS = 4'000'000; // 8 потоков * 500'000 операций
+constexpr size_t TOTAL_OPERATIONS = 2'000'000;
 constexpr size_t MIN_ALLOC_SIZE = 256;
 constexpr size_t MAX_ALLOC_SIZE = 8192;
 constexpr size_t BENCHMARK_RUNS = 5;
