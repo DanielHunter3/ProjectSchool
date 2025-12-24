@@ -1,6 +1,6 @@
 # Компилятор и флаги
 CXX = g++
-CXXFLAGS = -O3 -pthread
+CXXFLAGS = -O3 -pthread -march=native
 SRC_DIR = src
 BUILD_DIR = test/build
 

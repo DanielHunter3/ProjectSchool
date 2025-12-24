@@ -3,7 +3,7 @@ project(allocator_benchmark)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_FLAGS "-O3 -march=native")
+set(CMAKE_CXX_FLAGS "-O3 -march=native -pthread")
 
 # Boost (только заголовки)
 find_package(Boost REQUIRED COMPONENTS headers)
