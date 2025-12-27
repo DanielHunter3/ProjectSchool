@@ -23,3 +23,7 @@ cd ..
 echo -e "${INF}Переходим к alloc-тестам${NC}"
 cd alloc
 ./actix.sh
+
+cd ..
+
+echo -e "${SUC}Всё готово!${NC}"
