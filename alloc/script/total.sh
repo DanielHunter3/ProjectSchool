@@ -51,7 +51,7 @@ declare -A PROGRAMS=(
   ["single_tcmalloc"]="Singlethread TCMALLOC"
   ["single_mimalloc"]="Singlethread MIMALLOC"
 
-  ["single_system"]="Multithread SYSTEM MALLOC"
+  ["multi_system"]="Multithread SYSTEM MALLOC"
   ["multi_jemalloc"]="Multithread JEMALLOC"
   ["multi_tcmalloc"]="Multithread TCMALLOC"
   ["multi_mimalloc"]="Multithread MIMALLOC"
