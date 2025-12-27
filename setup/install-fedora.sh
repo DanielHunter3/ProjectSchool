@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+set -euo pipefail
 echo "Установка зависимостей для Fedora/RHEL..."
 sudo dnf install -y \
     gcc-c++ \

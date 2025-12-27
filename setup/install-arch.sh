@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+set -euo pipefail
 echo "Установка зависимостей для Arch Linux..."
 sudo pacman -Syu --needed \
     base-devel \
@@ -10,5 +10,5 @@ sudo pacman -Syu --needed \
     gperftools \
     hyperfine \
     python-pip
-pip install matplotlib numpy
+pip install --user matplotlib numpy
 echo "Зависимости установлены!"

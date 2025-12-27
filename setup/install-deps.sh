@@ -1,7 +1,11 @@
 #!/bin/bash
 # Автоматическое определение ОС и установка зависимостей
 
+set -euo pipefailuo pipefail
+
 echo "=== Установка зависимостей для проекта ==="
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 detect_os() {
     if [[ -f /etc/os-release ]]; then
@@ -23,27 +27,34 @@ echo "Обнаружена ОС: $OS"
 case $OS in
     ubuntu|debian|linuxmint|pop)
         echo "Запуск установки для Debian-based систем..."
-        exec "$(dirname "$0")/install-debian.sh"
+        exec "$SCRIPT_DIR/install-debian.sh"
         ;;
     fedora|centos|rhel|rocky)
         echo "Запуск установки для Fedora/RHEL-based систем..."
-        exec "$(dirname "$0")/install-fedora.sh"
+        exec "$SCRIPT_DIR/install-fedora.sh"
         ;;
     arch|manjaro|endeavouros)
         echo "Запуск установки для Arch-based систем..."
-        exec "$(dirname "$0")/install-arch.sh"
+        exec "$SCRIPT_DIR/install-arch.sh"
         ;;
     msys2)
         echo "Запуск установки для MSYS2 (Windows)..."
-        exec "$(dirname "$0")/install-msys2.ps1"
+        echo "Запустите PowerShell скрипт отдельно:"
+        echo "powershell -ExecutionPolicy Bypass -File \"$SCRIPT_DIR/install-msys2.ps1\""
+        exit 1
         ;;
     macos)
         echo "Запуск установки для macOS..."
-        exec "$(dirname "$0")/install-macos.sh"
+        exec "$SCRIPT_DIR/install-macos.sh"
         ;;
     *)
         echo "ОС не распознана или не поддерживается."
-        echo "Пожалуйста, выберите скрипт вручную из папки scripts/"
+        echo "Пожалуйста, выберите скрипт вручную из папки scripts/:"
+        echo "  install-debian.sh   - Debian/Ubuntu/Mint"
+        echo "  install-fedora.sh   - Fedora/RHEL/CentOS"
+        echo "  install-arch.sh     - Arch/Manjaro"
+        echo "  install-macos.sh    - macOS"
+        echo "  install-msys2.ps1   - Windows (только из PowerShell)"
         exit 1
         ;;
 esac
