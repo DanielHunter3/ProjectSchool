@@ -8,3 +8,5 @@ prototype
 *.log
 *.txt
 *.json
+
+!CMakeLists.txt
