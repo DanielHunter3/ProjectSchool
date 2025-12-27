@@ -54,7 +54,3 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 Write-Host "`n✅ Зависимости установлены!" -ForegroundColor Green
-Write-Host "Для сборки проекта запустите:" -ForegroundColor Cyan
-Write-Host "  mkdir build && cd build" -ForegroundColor White
-Write-Host "  cmake -G 'Ninja' -DCMAKE_BUILD_TYPE=Release .." -ForegroundColor White
-Write-Host "  cmake --build . --parallel" -ForegroundColor White
