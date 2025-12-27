@@ -11,5 +11,8 @@ sudo apt install -y \
     libgoogle-perftools-dev \
     hyperfine \
     python3-pip
-pip3 install matplotlib numpy  # Для графиков, если нужно
-echo "Зависимости установлены!"
+
+pip3 install --user matplotlib numpy
+
+echo "✅ Зависимости установлены!"
+exit 0

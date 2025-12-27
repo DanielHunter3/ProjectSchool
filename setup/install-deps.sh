@@ -1,7 +1,7 @@
 #!/bin/bash
 # Автоматическое определение ОС и установка зависимостей
 
-set -euo pipefailuo pipefail
+set -euo pipefail  # ✅ Исправлено
 
 echo "=== Установка зависимостей для проекта ==="
 
@@ -39,8 +39,10 @@ case $OS in
         ;;
     msys2)
         echo "Запуск установки для MSYS2 (Windows)..."
-        echo "Запустите PowerShell скрипт отдельно:"
-        echo "powershell -ExecutionPolicy Bypass -File \"$SCRIPT_DIR/install-msys2.ps1\""
+        echo "В MSYS2 используйте bash-скрипт:"
+        echo "  ./scripts/install-deps.sh"
+        echo "Или PowerShell скрипт:"
+        echo "  powershell -ExecutionPolicy Bypass -File \"$SCRIPT_DIR/install-msys2.ps1\""
         exit 1
         ;;
     macos)
@@ -54,7 +56,7 @@ case $OS in
         echo "  install-fedora.sh   - Fedora/RHEL/CentOS"
         echo "  install-arch.sh     - Arch/Manjaro"
         echo "  install-macos.sh    - macOS"
-        echo "  install-msys2.ps1   - Windows (только из PowerShell)"
+        echo "  install-msys2.ps1   - Windows (только из PowerShell в MSYS2)"
         exit 1
         ;;
 esac

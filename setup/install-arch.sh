@@ -10,5 +10,15 @@ sudo pacman -Syu --needed \
     gperftools \
     hyperfine \
     python-pip
-pip install --user matplotlib numpy
-echo "Зависимости установлены!"
+
+# Используем явно python или pip3
+if command -v python &> /dev/null; then
+    python -m pip install --user matplotlib numpy
+elif command -v pip3 &> /dev/null; then
+    pip3 install --user matplotlib numpy
+else
+    pip install --user matplotlib numpy
+fi
+
+echo "✅ Зависимости установлены!"
+exit 0
