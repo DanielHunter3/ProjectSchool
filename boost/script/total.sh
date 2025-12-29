@@ -37,12 +37,12 @@ hypertest() {
 # =============================================
 # Настройки
 # =============================================
-TEST_DIR="test"
+TEST_DIR="boost/test"
 BUILD_DIR="${TEST_DIR}/build"
 LOG_DIR="${TEST_DIR}/logs"
 LOG_FILE="${LOG_DIR}/benchmark.log"
 RUNS=5
-WARMUP=3
+WARMUP=5
 
 # Тестируемые программы и их описания
 declare -A PROGRAMS=(

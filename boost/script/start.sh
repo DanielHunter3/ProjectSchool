@@ -12,7 +12,7 @@ NC='\033[0m' # No Color - без цвета
 # =============================================
 # Настройки
 # =============================================
-TEST_DIR="test"
+TEST_DIR="boost/test"
 BUILD_DIR="${TEST_DIR}/build"
 LOG_DIR="${TEST_DIR}/logs"
 LOG_FILE="${LOG_DIR}/benchmark.log"

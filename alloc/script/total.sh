@@ -37,7 +37,7 @@ hypertest() {
 # =============================================
 # Настройки
 # =============================================
-TEST_DIR="test"
+TEST_DIR="alloc/test"
 BUILD_DIR="${TEST_DIR}/build"
 LOG_DIR="${TEST_DIR}/logs"
 LOG_FILE="${LOG_DIR}/benchmark.log"

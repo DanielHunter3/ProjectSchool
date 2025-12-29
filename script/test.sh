@@ -15,15 +15,9 @@ NC='\033[0m' # No Color - без цвета
 # Action
 # =============================================
 echo -e "${INF}Переходим к boost-тестам${NC}"
-cd boost
-./actix.sh
-
-cd ..
+boost/actix.sh
 
 echo -e "${INF}Переходим к alloc-тестам${NC}"
-cd alloc
-./actix.sh
-
-cd ..
+alloc/actix.sh
 
 echo -e "${SUC}Всё готово!${NC}"

@@ -2,9 +2,11 @@ build
 .vscode
 without
 prototype
+.venv
+__pycache__
 
 *.exe
-*.py
+*.png
 *.log
 *.txt
 *.json
